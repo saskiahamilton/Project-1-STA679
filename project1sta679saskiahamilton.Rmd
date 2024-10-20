@@ -1,0 +1,233 @@
+---
+title: "STA679 Project1"
+author: "Saskia H Hamilton"
+output: html_document
+date: "2024-10-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse) # CONTAINS dplyr AND ggplot2
+library(dplyr)
+library(kableExtra)
+
+# If on Saskia PC
+## food <-read.csv("C:\\Users\\Chris\\OneDrive\\Desktop\\STA679project1\\ifood_df.csv")
+# If on Saskia laptop
+food <-read.csv("C:\\Users\\hamil\\OneDrive\\Desktop\\STA679project1\\ifood_df.csv")
+names(food)
+attach(food)
+# since complain is numeric but everything else is integer
+Complain <- as.integer(Complain)
+
+```
+
+A food delivery app company sought to engage customers through marketing campaigns to help preserve their dominant market position. They collected data on 2,205 customers to gain insights on the types of individuals who are likely to respond to their marketing campaigns. The dataset includes demographic information, purchasing and participation history, number of purchases, and acceptance of marketing offers (ie, rebates, rewards points, special gifts, etc) during 5 separate marketing campaigns. The details of any individual campaign are unavailable, which gives me leeway to impute what they may have been. Please use the attached dataset to answer the following questions:
+
+1) Who is in the study sample? For Table 1, please summarize the study sample characteristics both overall and by whether they overall accepted the advertising campaign (AcceptedCmpOverall 0 vs $\geq 1$, 2 groups). Rows should be organized by variable (not just variable name), and columns should present the 3 classes: Overall, 0 accepted campaigns, and $\geq 1$ accepted campaigns. Data should be presented as Mean $\pm$ SD for symmetric continuous variables, median [Q1, Q3] for skewed continuous variables, and Count (%) for categorical variables. Varying the format data are presented helps make it clearer what the reader is seeing, but please include a footnote indicating how means, quantiles, and percentages are being presented. Include a brief paragraph describing the study sample including the characteristics of those who did and did not accept the advertising campaigns. No statistical tests necessary.
+
+Table 1 variables include customer age, Education, Marital status, Number of Kids or Teens in home, Annual Income, and Whether the customer complained in the past year. Assume financial info is in USD\$, and provide clear labels and units (n for count data) for all variables
+
+```{r}
+n <- 2205
+
+# symmetric and continuous variables: Age, Income, 
+  # sc
+
+# skewed and continuous variables: TOTAL number of kids,
+  # syc
+
+# categorical variables: Education???, marital, Complain (0 or 1)
+  # cat
+
+# function to summarize data for each group: overall, accepted, not accepted
+summary <- function(group) {
+  group %>% summarize(
+    Age = paste0(round(mean(Age, na.rm = TRUE), 1), " ± ", round(sd(Age), 1)), # sc
+    Income = paste0(round(mean(Income, na.rm = TRUE), 1), " ± ", round(sd(Income), 1)), #sc
+    Kidhome = paste0(round(mean(Kidhome, na.rm = TRUE), 1), " ± ", round(sd(Kidhome), 1)), #sc
+    Teenhome = paste0(round(mean(Teenhome, na.rm = TRUE), 1), " ± ", round(sd(Teenhome), 1)), #SC
+    education_Basic = paste0((sum(education_Basic == 1)), " (", round(((sum(education_Basic == 1)/n) * 100), 1), "%)" ), #cat
+    education_Graduation = paste0((sum(education_Graduation == 1)), " (", round(((sum(education_Graduation == 1)/n) * 100), 1), "%)"), #cat
+    education_Master = paste0((sum(education_Master == 1)), " (", round(((sum(education_Master == 1)/n) * 100), 1), "%)" ), #cat
+    education_PhD = paste0((sum(education_PhD == 1)), " (", round(((sum(education_PhD == 1)/n) * 100), 1), "%)" ), #cat
+    education_2n = paste0((sum(education_2n.Cycle == 1)), " (", round(((sum(education_2n.Cycle == 1)/n) * 100), 1), "%)" ),  #cat
+    marital_Single = paste0((sum(marital_Single == 1)), " (", round(((sum(marital_Single == 1)/n) * 100), 1), "%)"), # cat
+    marital_Divorced = paste0((sum(marital_Divorced == 1)), " (", round(((sum(marital_Divorced == 1)/n) * 100), 1), "%)" ), #cat
+    marital_Married = paste0((sum(marital_Married == 1)), " (", round(((sum(marital_Married == 1)/n) * 100), 1), "%)" ), #cat
+    marital_Together = paste0((sum(marital_Together == 1)), " (", round(((sum(marital_Together == 1)/n) * 100), 1), "%)" ), #cat
+    marital_Widow = paste0((sum(marital_Widow == 1)), " (", round(((sum(marital_Widow == 1)/n) * 100), 1), "%)" ), #cat
+    Complain =  paste0((sum(Complain == 1)), " (", round(((sum(Complain == 1)/n) * 100), 1), "%)" ) #cat
+  )
+}
+
+# original total kids code: totalkids = paste0((median(totalkids)), " [", quantile(totalkids, 0.25), ", ", quantile(totalkids, 0.75), "]" ), #syc
+
+    
+# MUST use list() instead of c() to store different data frames of different groups
+# [[]] access element from list
+    
+columns <- list(
+  Overall = food,
+  Not_Accepted = filter(food, AcceptedCmpOverall == 0),
+  Accepted = filter(food, AcceptedCmpOverall >= 1)
+)
+
+# empty list for results
+results <- list()
+
+# loop through 1. overall 2. accepted and 3. not accepted to apply summary
+for (i in names(columns)) {
+  results[[i]] <- summary(columns[[i]])
+}
+
+#   Overall <- unlist(results$Overall), # unlist() make into vector for table display
+#  Not_Accepted <- unlist(results$Not_Accepted),
+#  Accepted <- unlist(results$Accepted)
+
+#table for output
+table_1 <- data.frame(
+  row.names = c("Age (in years) [Mean±SD]", "Income (in USD) [Mean±SD]", "Number of Kids at Home (in people) [Mean±SD]", "Number of Teens at Home (in people) [Mean±SD]", "Education Level Basic (n (%))", "Education Level Graduation (n (%))", "Education Level Master (n (%))", "Education Level PhD (n (%))", "Education Level 2n Cycle (n (%))", "Marital Status Single (n (%))", "Marital Status Divorced (n (%))", "Marital Status Married (n (%))", "Marital Status Together (n (%))", "Marital Status Widow (n (%))", "Complaints (n (%))"), 
+  Overall = unlist(results$Overall), 
+  Not_Accepted = unlist(results$Not_Accepted),
+  Accepted = unlist(results$Accepted)
+)
+
+#rename columns
+colnames(table_1) <- c("Overall", "Not Accepted", "Accepted")
+
+display_1 <- kable(table_1, format = "simple", caption = "Participants in Advertisement Campaign Study by Offer Acceptance")
+display_1
+
+```
+
+The study utilized n = 2,205 customers of a food delivery app company in Brazil. Between customers who accepted the campaign offer and customers who did not, age, number of children at home, and number of teens at home were similar. Those who accepted the offer were more likely to have a higher income level than customers who did not accept. Customers who did not accept the campaign offer had a higher number of complaints. Customers who did not accept were also more likely be report marital status as "Married" or "Together" and were more likely to possess a graduation level of education. 
+
+2) How much do customers spend in different categories? Repeat Table 1 except across category expenditures (fish, meat, fruit, sweets, wines, gold(?!), regular, and total). Briefly comment on expenditures.
+
+```{r}
+n <- 2205
+
+# continuous and symmetric (checked by histograms)
+  # (nothing)
+
+# continuous and skewed (checked by histograms)
+  # MntFishProducts
+  # MntFruits
+  # MntMeatProducts
+  # MntSweetProducts
+  # MntWines
+  # MntGoldProds
+  # MntRegularProds
+    # WHY are there negative amounts for regular products????
+  # MntTotal
+
+# function to summarize data for each group: overall, accepted, not accepted
+summary <- function(group) {
+  group %>% summarize(
+    MntFishProducts = paste0((median(MntFishProducts)), " [", quantile(MntFishProducts, 0.25, na.rm = FALSE), ", ", quantile(MntFishProducts, 0.75, na.rm = FALSE), "]"),
+    MntFruits = paste0((median(MntFruits)), " [", quantile(MntFruits, 0.25, na.rm = FALSE), ", ", quantile(MntFruits, 0.75, na.rm = FALSE), "]"),
+    MntMeatProducts = paste0((median(MntMeatProducts)), " [", quantile(MntMeatProducts, 0.25, na.rm = FALSE), ", ", quantile(MntMeatProducts, 0.75, na.rm = FALSE), "]"),
+    MntSweetProducts = paste0((median(MntSweetProducts)), " [", quantile(MntSweetProducts, 0.25, na.rm = FALSE), ", ", quantile(MntSweetProducts, 0.75, na.rm = FALSE), "]"),
+    MntWines = paste0((median(MntWines)), " [", quantile(MntWines, 0.25, na.rm = FALSE), ", ", quantile(MntWines, 0.75, na.rm = FALSE), "]"),
+    MntGoldProds = paste0((median(MntGoldProds)), " [", quantile(MntGoldProds, 0.25, na.rm = FALSE), ", ", quantile(MntGoldProds, 0.75, na.rm = FALSE), "]"),
+    MntRegularProds = paste0((median(MntRegularProds)), " [", quantile(MntRegularProds, 0.25, na.rm = FALSE), ", ", quantile(MntRegularProds, 0.75, na.rm = FALSE), "]"),
+    MntTotal = paste0((median(MntTotal)), " [", quantile(MntTotal, 0.25, na.rm = FALSE), ", ", quantile(MntTotal, 0.75, na.rm = FALSE), "]")
+  )
+}
+
+# totalkids = paste0((median(x)), " [", quantile(x, 0.25), ", ", quantile(x, 0.75), "]"),
+
+# MUST use list() instead of c() to store different data frames of different groups
+# [[]] access element from list
+
+columns <- list(
+  Overall = food,
+  Not_Accepted = filter(food, AcceptedCmpOverall == 0),
+  Accepted = filter(food, AcceptedCmpOverall >= 1)
+)
+
+# empty list for results
+results <- list()
+
+# loop through 1. overall 2. accepted and 3. not accepted to apply summary
+for (i in names(columns)) {
+  results[[i]] <- summary(columns[[i]])
+}
+
+#   Overall <- unlist(results$Overall), # unlist() make into vector for table display
+#  Not_Accepted <- unlist(results$Not_Accepted),
+#  Accepted <- unlist(results$Accepted)
+
+#table for output
+table_2 <- data.frame(
+  row.names = c("Fish Products ($ USD)", "Fruits ($ USD)", "Meat Products ($ USD)", "Sweet Products ($ USD)", "Wines ($ USD)", "Gold Products ($ USD)", "Regular Products ($ USD)", "Total ($ USD)"), 
+  Overall = unlist(results$Overall), 
+  Not_Accepted = unlist(results$Not_Accepted),
+  Accepted = unlist(results$Accepted)
+)
+
+#rename columns
+colnames(table_2) <- c("Overall", "Not Accepted", "Accepted")
+
+display_2 <- kable(table_2, format = "simple", caption = "Customer Expenditures Across Categories")
+display_2 
+
+```
+
+This study used n = 2,205 customers of a food delivery app company in Brazil. All expenditure categories are skewed to the right so data is presented in the form: median [Q1, Q3]. Customers who accepted the advertisement campaign spend more in all categories, especially in regular products, wines, and meat products. The total spending of customers who did not accept the advertisement campaign was lower than the total spending of customers who did accept the advertisement campaign. 
+
+3) Across each of the Advertising Campaigns, provide a stacked bar chart of customer spending to get a sense of what expenditures look like for the types of customers who respond to the first, second, third, etc. marketing campaigns. Include 2 versions: one that presents absolute expenditures (total sum is MntTotal) and one that presents relative expenditures (total sums to 1 or 100%). Comment on differences in customer expenditures across campaigns and briefly explain how each chart differs with regard to understanding customer expenditures. What are the spending characteristics of customers who responded to each campaign. Provide (in the text) details regarding the incomes of customers who responded to campaigns and how that compares to the overall sample.
+
+```{r}
+# x axis is the same for both
+
+accepted_cmp <- c("AcceptedCmp1", "AcceptedCmp2", "AcceptedCmp3", "AcceptedCmp4", "AcceptedCmp5")
+
+# absolute expenditures
+
+# for n in AcceptedCmpn
+
+
+
+# relative expenditures
+
+# rel_expenditures <- 
+
+```
+
+
+4) Executives are interested in how the participants' demographics may have changed over time. Five years ago, a similar study found that customers were on average about 50 years old, lived with 0.95 dependents (child or teen), had average incomes of \$50k, spent a mean of \$500/year on items, and visited the website 5.2 times/month. Please provide a table with statistical tests of these quantities using two-tailed tests at $\alpha=.05$ identifying the quantity of interest (not just variable name in R), mean under the null hypothesis, observed mean and 95% CI, degrees of freedom, if appropriate, **parametric** test statistic, and p-value. Comment on the observed differences and what message, if any, the store should take from this.
+
+```{r}
+# `r f`
+
+
+```
+
+5) Executives suspect that customers who accepted the second campaign (free puppy with purchase of a bag of dog food) may differ from the customers from the study 5 years ago. Perform the same comparisons above with only the participants who accepted the 2nd campaign.
+
+```{r}
+# `r f`
+
+
+```
+
+
+6) In part 5, we note that the sample size is fairly small and some of our variables may not be normally distributed. Redo the estimates in part 5 using a (nonparametric) bootstrap confidence interval and comment on whether conclusions change.
+
+```{r}
+# `r f`
+
+
+```
+
+
+7) Ultimately the goal of an advertising campaign is to attract wealthy shoppers **and** to increase the number of shoppers at the store. Provide boxplots of the incomes of shoppers who did and didn't respond to each of the 5 campaigns. Without providing a statistical test, which campaign attracted the wealthiest shoppers, which attracted the largest number of shoppers, and ultimately which campaign results in the greatest financial benefit to the store (combined numbers and wealth)?
+
+```{r}
+# `r f`
+
+
+```
+
